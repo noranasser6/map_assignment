@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Demo: Local search with the Geocoding API</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
+    <link
+      href="https://api.tiles.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css"
+      rel="stylesheet"
+    /> <!-- adding geocoder-->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.css"
+      type="text/css"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;  
+        width: 100%;
+      }
+
+
+    </style>
+  </head>
+  <body>
+ <style>
+    #menu {
+      position: absolute;
+      background: #efefef;
+      padding: 10px;
+      font-family: 'Open Sans', sans-serif;
+      }
+ </style>
+    <div id="map"></div>
+    
+    <div id="menu">
+        <input id="satellite-streets-v12" type="radio" name="rtoggle" value="satellite" checked="checked">
+        <label for="satellite-streets-v12">satellite streets</label>
+        <input id="light-v11" type="radio" name="rtoggle" value="light">
+        <label for="light-v11">light</label>
+        <input id="dark-v11" type="radio" name="rtoggle" value="dark">
+        <label for="dark-v11">dark</label>
+        <input id="streets-v12" type="radio" name="rtoggle" value="streets">
+        <label for="streets-v12">streets</label>
+        <input id="outdoors-v12" type="radio" name="rtoggle" value="outdoors">
+        <label for="outdoors-v12">outdoors</label>
+        </div>
+
+    <script>
+      mapboxgl.accessToken =
+        "pk.eyJ1Ijoibm9yYW5hc3NlciIsImEiOiJjbGNobDVxamQwY29hM25tOWQ5ZDVvdjBuIn0._xXt28wXvveE2arL6Gm1kQ";
+      const map = new mapboxgl.Map({
+        container: "map", 
+        style: "mapbox://styles/mapbox/streets-v12", 
+        center: [35.930359, 31.963158], 
+        zoom: 12, 
+      });
+
+      const marker = new mapboxgl.Marker() 
+        .setLngLat([35.930359, 31.963158]) 
+        .addTo(map); 
+
+      const geocoder = new MapboxGeocoder({
+        
+        accessToken: mapboxgl.accessToken, 
+        mapboxgl: mapboxgl, 
+        marker: false,
+        placeholder: "Search for places", 
+   
+        proximity: {
+          longitude: 35.930359,
+          latitude: 31.963158,
+        }, 
+      });
+
+      const layerList = document.getElementById('menu');
+const inputs = layerList.getElementsByTagName('input');
+ 
+for (const input of inputs) {
+input.onclick = (layer) => {
+const layerId = layer.target.id;
+map.setStyle('mapbox://styles/mapbox/' + layerId);
+};}
+
+map.addControl(new mapboxgl.NavigationControl());
+
+      
+      map.addControl(geocoder);
+
+      map.on("load", () => {
+        map.addSource("single-point", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: [],
+          },
+        });
+
+        map.addLayer({
+          id: "point",
+          source: "single-point",
+          type: "circle",
+          paint: {
+            "circle-radius": 10,
+            "circle-color": "#448ee4",
+          },
+        });
+        geocoder.on("result", (event) => {
+          map.getSource("single-point").setData(event.result.geometry);
+        });
+      });
+    </script>
+  </body>
+</html>
